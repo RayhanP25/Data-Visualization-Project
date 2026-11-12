@@ -1,0 +1,7 @@
+"year","road_user","actual","predicted","percentage_vs_trend"
+2020,"Car driver",12217,14270.9,-14.4
+2020,"Car passenger",4344,5181.4,-16.2
+2020,"Car unknown position",731,782.3,-6.6
+2020,"Motorcyclist",8684,9119,-4.8
+2020,"Pedal cyclist",8332,7670.3,8.6
+2020,"Pedestrian",2103,2686.1,-21.7
