@@ -1,0 +1,13 @@
+"Road user","Female+Sum(Sum(Hospitalisations))","Male+Sum(Sum(Hospitalisations))","intersex or indeterminate or missing+Sum(Sum(Hospitalisations))","Gender Gap"
+"Bus occupant",1618,965,1,1561370
+"Car driver",64966,70092,5,4553596872
+"Car passenger",31864,21376,1,681124864
+"Car unknown position",4251,4584,1,19486584
+"Heavy transport driver",124,4490,,556760
+"Heavy transport passenger",164,389,,63796
+"Heavy transport unknown position",44,400,,17600
+"Motorcyclist",9629,82691,2,796231639
+"Other or unknown",2251,4095,,9217845
+"Pedal cyclist",16218,59140,4,959132520
+"Pedestrian",12382,16149,1,199956918
+"Pick-up truck or van occupant",595,2392,,1423240
