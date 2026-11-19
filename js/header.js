@@ -1,24 +1,21 @@
 const NAV_LINKS = [
-  { label: 'Overview', href: 'index.html' },
-  { label: 'Method', href: 'method.html' },
-  { label: 'Data source', href: 'data-source.html' },
+  { label: 'Overview', page: 'home', href: 'index.html' },
+  { label: 'Method', page: 'method', href: 'method.html' },
+  { label: 'Data source', page: 'data-source', href: 'data-source.html' },
 ];
 
-function renderHeader() {
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  const links = NAV_LINKS.map(({ label, href }) => {
-    const active = href === currentPage;
-    return `<a href="${href}" class="${active ? 'font-bold text-white' : 'text-nav'}">${label}</a>`;
-  }).join('');
+const headerMount = document.getElementById('site-header');
+const activePage = headerMount.dataset.page;
 
-  document.getElementById('site-header').innerHTML = `
-    <header class="flex h-20 items-center justify-between border-b border-header-line bg-header px-20 text-[15px]">
-      <div class="flex items-center gap-3">
-        <img src="assets/hospital.png" alt="" class="h-12 w-12">
-        <span class="text-base font-bold text-white">Road Crash Hospitalisations</span>
-      </div>
-      <nav class="flex gap-10">${links}</nav>
-    </header>`;
-}
+const links = NAV_LINKS.map(({ label, page, href }) =>
+  `<a href="${href}" class="${page === activePage ? 'font-bold text-white' : 'text-nav'}">${label}</a>`
+).join('');
 
-renderHeader();
+headerMount.innerHTML = `
+  <header class="flex h-20 shrink-0 items-center justify-between border-b border-header-line bg-header px-20 text-[0.9375rem]">
+    <a href="index.html" class="flex items-center gap-3">
+      <img src="assets/hospital.png" alt="" class="h-12 w-12">
+      <span class="text-base font-bold text-white">Road Crash Hospitalisations</span>
+    </a>
+    <nav class="flex gap-10">${links}</nav>
+  </header>`;

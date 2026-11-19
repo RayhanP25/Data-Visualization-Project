@@ -7,26 +7,53 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            page: '#F6F6F3',
-            header: '#111214',
-            'header-line': '#E6E6E1',
-            nav: '#9AA0AA',
-          },
-        },
-      },
-    };
-  </script>
+  <script src="js/tailwind-config.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-<body class="min-h-screen bg-page font-sans">
-  <div id="site-header"></div>
+<body class="flex h-screen flex-col overflow-hidden bg-page font-sans">
+  <div id="site-header" data-page="home"></div>
+  <main class="flex min-h-0 flex-1 flex-col">
+    <section class="flex min-h-0 flex-1 flex-col px-20 pt-[clamp(1.5rem,5vh,3.75rem)] pb-[clamp(1rem,3vh,2.25rem)]">
+      <p class="text-[0.8125rem] font-bold text-accent">COS30045 • DATA VISUALISATION PROJECT</p>
+      <h1 class="mt-3 text-[clamp(2.25rem,6.2vh,3.5rem)] font-bold leading-[1.2] text-ink">Hospitalised road crash injuries</h1>
+      <p class="mt-[clamp(0.5rem,2vh,1.25rem)] text-[clamp(1rem,2.2vh,1.125rem)] text-muted">Explore how road crash hospitalisations in Australia changed between 2011 and 2021, from seasonal peaks to the impact of COVID-19 in 2020.</p>
+      <div class="mt-[clamp(1.25rem,5vh,4.5rem)] grid grid-cols-5 gap-6">
+        <article class="flex h-[clamp(18.75rem,50vh,25rem)] flex-col rounded-2xl border border-header-line bg-white px-6 pt-6 pb-[clamp(1.25rem,4vh,2.25rem)]">
+          <p class="text-[0.8125rem] font-bold text-accent">01</p>
+          <h2 class="mt-2.5 text-xl font-bold text-ink">Peak months and seasons</h2>
+          <p class="mt-3.5 text-sm leading-5 text-muted">Are there months or seasons when road crash hospitalisations peak?</p>
+          <a href="q1.html" class="mt-auto text-sm font-bold text-accent hover:underline">View chart →</a>
+        </article>
+        <article class="flex h-[clamp(18.75rem,50vh,25rem)] flex-col rounded-2xl border border-header-line bg-white px-6 pt-6 pb-[clamp(1.25rem,4vh,2.25rem)]">
+          <p class="text-[0.8125rem] font-bold text-accent">02</p>
+          <h2 class="mt-2.5 text-xl font-bold text-ink">Male and female gap</h2>
+          <p class="mt-3.5 text-sm leading-5 text-muted">How does the gap between males and females change across age groups and road user types?</p>
+          <a href="q2.html" class="mt-auto text-sm font-bold text-accent hover:underline">View chart →</a>
+        </article>
+        <article class="flex h-[clamp(18.75rem,50vh,25rem)] flex-col rounded-2xl border border-header-line bg-white px-6 pt-6 pb-[clamp(1.25rem,4vh,2.25rem)]">
+          <p class="text-[0.8125rem] font-bold text-accent">03</p>
+          <h2 class="mt-2.5 text-xl font-bold text-ink">Road user trends</h2>
+          <p class="mt-3.5 text-sm leading-5 text-muted">Which road user groups increased or decreased the most from 2011 to 2021?</p>
+          <a href="q3.html" class="mt-auto text-sm font-bold text-accent hover:underline">View chart →</a>
+        </article>
+        <article class="flex h-[clamp(18.75rem,50vh,25rem)] flex-col rounded-2xl border border-header-line bg-white px-6 pt-6 pb-[clamp(1.25rem,4vh,2.25rem)]">
+          <p class="text-[0.8125rem] font-bold text-accent">04</p>
+          <h2 class="mt-2.5 text-xl font-bold text-ink">Rates by age group</h2>
+          <p class="mt-3.5 text-sm leading-5 text-muted">How have road crash hospitalisation rates changed among younger and older Australians between 2011 and 2021?</p>
+          <a href="q4.html" class="mt-auto text-sm font-bold text-accent hover:underline">View chart →</a>
+        </article>
+        <article class="flex h-[clamp(18.75rem,50vh,25rem)] flex-col rounded-2xl border border-header-line bg-white px-6 pt-6 pb-[clamp(1.25rem,4vh,2.25rem)]">
+          <p class="text-[0.8125rem] font-bold text-accent">05</p>
+          <h2 class="mt-2.5 text-xl font-bold text-ink">COVID-19 impact</h2>
+          <p class="mt-3.5 text-sm leading-5 text-muted">How did 2020 (the COVID-19 year) differ from the 2011–2019 trend, and which road user groups changed most?</p>
+          <a href="q5.html" class="mt-auto text-sm font-bold text-accent hover:underline">View chart →</a>
+        </article>
+      </div>
+      <footer class="mt-auto pt-[clamp(1rem,3vh,3rem)] text-[0.8125rem] text-muted">Source: BITRE Hospitalised Injury Data (AIHW National Hospital Morbidity Database), 2011–2021</footer>
+    </section>
+  </main>
   <script src="js/header.js"></script>
 </body>
 </html>
