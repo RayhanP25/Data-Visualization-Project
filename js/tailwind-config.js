@@ -6,6 +6,7 @@ tailwind.config = {
         page: '#F6F6F3',
         header: '#111214',
         'header-line': '#E6E6E1',
+        'card-line': '#E2DACD',
         nav: '#9AA0AA',
         accent: '#161F73',
         ink: '#16181D',
