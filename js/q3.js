@@ -1,302 +1,280 @@
+const DECREASE = '#C8553D';
+const INCREASE = '#161F73';
+const GROUPS = ['Bus occupant', 'Car driver', 'Car passenger', 'Car unknown position', 'Heavy transport driver', 'Heavy transport passenger', 'Heavy transport unknown position', 'Motorcyclist', 'Other or unknown', 'Pedal cyclist', 'Pedestrian', 'Pick-up truck or van occupant'];
+const YEARS = d3.range(2011, 2022);
+const MUTED = '#6B6F76';
+const INK = '#16181D';
+const GRID = '#E6E6E1';
+const fmt = d3.format(',');
 
-// Load the processed road user dataset
-d3.csv("data/processed/road_user_changes_2011_2021.csv")
-    .then(function(data) {
+const chartEl = document.getElementById('chart');
+const chartCard = chartEl.parentElement;
+const tooltip = document.getElementById('tooltip');
+const viewButtons = document.querySelectorAll('[data-view]');
+const aboutTexts = document.querySelectorAll('[data-about]');
+const casesSetting = document.getElementById('cases-setting');
+const casesToggle = document.getElementById('cases-toggle');
+const roadToggle = document.getElementById('road-toggle');
+const roadMenu = document.getElementById('road-menu');
+const roadCount = document.getElementById('road-count');
+const roadCheckboxes = document.querySelectorAll('[data-road]');
+const selectedRoads = new Set();
+let rows = [];
+let view = 'index';
 
-        // Convert dataset values into numbers
-        data.forEach(function(d) {
-            d["2011+Sum(Hospitalisations)"] = Number(d["2011+Sum(Hospitalisations)"]);
-            d["2021+Sum(Hospitalisations)"] = Number(d["2021+Sum(Hospitalisations)"]);
-            d["Absolute Change"] = Number(d["Absolute Change"]);
-            d["Percentage Change"] = Number(d["Percentage Change"]);
-        });
+function visibleRows() {
+  return rows.filter((d) => selectedRoads.has(d.name));
+}
 
-        // Set the chart dimensions
-        const width = 1100;
-        const height = 600;
+function colourFor(v) {
+  return v < 0 ? DECREASE : INCREASE;
+}
 
-        const margin = {
-            top: 30,
-            right: 100,
-            bottom: 70,
-            left: 260
-        };
+function signed(v, digits = 0) {
+  return `${v < 0 ? '−' : '+'}${digits ? Math.abs(v).toFixed(digits) : fmt(Math.round(Math.abs(v)))}`;
+}
 
-        const chartWidth = width - margin.left - margin.right;
-        const chartHeight = height - margin.top - margin.bottom;
+function tickLabel(v) {
+  const sign = v > 0 ? '+' : v < 0 ? '−' : '';
+  return casesToggle.checked ? `${sign}${fmt(Math.abs(v))}` : `${sign}${Math.abs(v)}%`;
+}
 
-        // Create the SVG chart area
-        const svg = d3.select("#q3-chart")
-            .append("svg")
-            .attr("viewBox", `0 0 ${width} ${height}`)
-            .attr("width", "100%");
+function showTooltip(event, d) {
+  tooltip.innerHTML = `<p class="font-bold">${d.name}</p>`
+    + `<p>${fmt(d.y2011)} in 2011, ${fmt(d.y2021)} in 2021</p>`
+    + `<p class="text-nav">${signed(d.abs)} cases (${signed(d.pct, 1)}%)</p>`;
+  tooltip.classList.remove('hidden');
+  moveTooltip(event);
+}
 
-        const chart = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+function moveTooltip(event) {
+  const box = chartCard.getBoundingClientRect();
+  tooltip.style.left = `${event.clientX - box.left + 16}px`;
+  tooltip.style.top = `${event.clientY - box.top + 16}px`;
+}
 
-        // Create the axis label
-        const axisLabel = svg.append("text")
-            .attr("x", width / 2)
-            .attr("y", height - 15)
-            .attr("text-anchor", "middle")
-            .attr("font-size", "14px");
+function hideTooltip() {
+  tooltip.classList.add('hidden');
+}
 
-        // Create the chart axes
-        const xAxis = chart.append("g")
-            .attr("transform", `translate(0,${chartHeight})`);
+function styleAxis(g) {
+  g.selectAll('text').attr('fill', MUTED).attr('font-size', 14).attr('font-family', 'Inter');
+  g.selectAll('.domain, line').attr('stroke', GRID);
+}
 
-        const yAxis = chart.append("g");
+function spread(items, gap) {
+  items.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < items.length; i++) {
+    if (items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
+  }
+  return items;
+}
 
-        // Create the zero reference line
-        const zeroLine = chart.append("line")
-            .attr("stroke", "#333333")
-            .attr("stroke-width", 2);
+function barValue(d) {
+  return casesToggle.checked ? d.abs : d.pct;
+}
 
-        // Store the current filter selections
-        let selectedMetric = "absolute";
-        let selectedGroup = "all";
+function drawBars(svg, width, height) {
+  const margin = { top: 44, right: 40, bottom: 64, left: 170 };
+  const visible = visibleRows().sort((a, b) => barValue(a) - barValue(b));
+  const maxAbs = d3.max(visible, (d) => Math.abs(barValue(d))) || 1;
+  const reach = maxAbs * 1.35;
+  const step = casesToggle.checked ? 1000 : 20;
+  const limit = Math.floor(reach / step) * step;
+  const ticks = d3.range(-limit, limit + 1, step);
+  const x = d3.scaleLinear().domain([-reach, reach]).range([margin.left, width - margin.right]);
+  const y = d3.scaleBand().domain(visible.map((d) => d.name)).range([margin.top, height - margin.bottom]).padding(0.3);
 
-        // Function to update the chart
-        function updateChart() {
+  svg.append('g')
+    .attr('transform', `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).tickValues(ticks).tickSize(-(height - margin.top - margin.bottom)).tickFormat(''))
+    .call((g) => g.select('.domain').remove())
+    .call((g) => g.selectAll('line').attr('stroke', GRID));
 
-            // Choose which values to display
-            const metric = selectedMetric === "absolute"
-                ? "Absolute Change"
-                : "Percentage Change";
+  svg.append('g')
+    .attr('transform', `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).tickValues(ticks).tickSize(0).tickFormat(tickLabel))
+    .call(styleAxis)
+    .call((g) => g.select('.domain').remove());
 
-            // Filter the road user groups
-            let filteredData = data.filter(function(d) {
+  svg.append('line')
+    .attr('x1', x(0)).attr('x2', x(0))
+    .attr('y1', margin.top - 8).attr('y2', height - margin.bottom)
+    .attr('stroke', '#8A8F98');
 
-                if (selectedGroup === "increase") {
-                    return d[metric] > 0;
-                }
+  svg.append('text')
+    .attr('x', (margin.left + width - margin.right) / 2)
+    .attr('y', height - 16)
+    .attr('text-anchor', 'middle')
+    .attr('fill', MUTED)
+    .attr('font-size', 13)
+    .text(casesToggle.checked ? 'Change in hospitalisations, 2011 to 2021 (cases)' : 'Change in hospitalisations, 2011 to 2021 (% of 2011 count)');
 
-                if (selectedGroup === "decrease") {
-                    return d[metric] < 0;
-                }
+  const legend = svg.append('g').attr('transform', `translate(${margin.left},8)`);
+  [['Decrease', DECREASE], ['Increase', INCREASE]].forEach(([label, colour], i) => {
+    const offset = i * 130;
+    legend.append('rect').attr('x', offset).attr('y', 0).attr('width', 14).attr('height', 14).attr('rx', 3).attr('fill', colour);
+    legend.append('text').attr('x', offset + 22).attr('y', 7).attr('dy', '0.32em').attr('fill', MUTED).attr('font-size', 13).text(label);
+  });
 
-                return true;
-            });
+  const rowG = svg.append('g')
+    .selectAll('g')
+    .data(visible)
+    .join('g')
+    .attr('transform', (d) => `translate(0,${y(d.name)})`)
+    .on('mouseenter', showTooltip)
+    .on('mousemove', moveTooltip)
+    .on('mouseleave', hideTooltip);
 
-            // Sort from largest increase to largest decrease
-            filteredData.sort(function(a, b) {
-                return b[metric] - a[metric];
-            });
+  rowG.append('text')
+    .attr('x', margin.left - 14)
+    .attr('y', y.bandwidth() / 2)
+    .attr('dy', '0.32em')
+    .attr('text-anchor', 'end')
+    .attr('fill', INK)
+    .attr('font-size', 15)
+    .text((d) => d.name);
 
-            // Find the largest absolute value
-            const maxChange = d3.max(filteredData, function(d) {
-                return Math.abs(d[metric]);
-            }) || 1;
+  rowG.append('rect')
+    .attr('x', (d) => x(Math.min(0, barValue(d))))
+    .attr('width', (d) => Math.abs(x(barValue(d)) - x(0)))
+    .attr('y', 0)
+    .attr('height', y.bandwidth())
+    .attr('rx', 6)
+    .attr('fill', (d) => colourFor(barValue(d)));
+}
 
-            // Create the horizontal scale
-            const xScale = d3.scaleLinear()
-                .domain([-maxChange * 1.15, maxChange * 1.15])
-                .range([0, chartWidth]);
+function drawIndex(svg, width, height) {
+  const margin = { top: 44, right: 250, bottom: 64, left: 70 };
+  const lines = visibleRows().map((d) => ({
+    d,
+    points: YEARS.map((year, i) => ({ year, value: (d.series[i] / d.series[0]) * 100 })),
+  }));
+  const all = lines.flatMap((l) => l.points.map((p) => p.value));
+  const lo = Math.min(d3.min(all) || 100, 100);
+  const hi = Math.max(d3.max(all) || 100, 100);
+  const pad = (hi - lo) * 0.08 || 5;
+  const x = d3.scalePoint().domain(YEARS).range([margin.left, width - margin.right]);
+  const y = d3.scaleLinear().domain([lo - pad, hi + pad]).nice().range([height - margin.bottom, margin.top]);
 
-            // Create the vertical scale
-            const yScale = d3.scaleBand()
-                .domain(filteredData.map(function(d) {
-                    return d["Road User Group"];
-                }))
-                .range([0, chartHeight])
-                .padding(0.25);
+  svg.append('g')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(6).tickSize(-(width - margin.left - margin.right)).tickFormat(''))
+    .call((g) => g.select('.domain').remove())
+    .call((g) => g.selectAll('line').attr('stroke', GRID));
 
-            // Update the horizontal axis
-            xAxis.call(
-                d3.axisBottom(xScale)
-                    .ticks(7)
-                    .tickFormat(function(value) {
-                        return selectedMetric === "absolute"
-                            ? d3.format(",")(value)
-                            : value + "%";
-                    })
-            );
+  svg.append('g')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(6).tickSize(0).tickFormat(d3.format('d')))
+    .call(styleAxis)
+    .call((g) => g.select('.domain').remove());
 
-            // Update the vertical axis
-            yAxis.call(d3.axisLeft(yScale));
+  svg.append('g')
+    .attr('transform', `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).tickSize(0))
+    .call(styleAxis)
+    .call((g) => g.select('.domain').remove());
 
-            // Update the zero reference line
-            zeroLine
-                .attr("x1", xScale(0))
-                .attr("x2", xScale(0))
-                .attr("y1", 0)
-                .attr("y2", chartHeight);
+  svg.append('line')
+    .attr('x1', margin.left).attr('x2', width - margin.right)
+    .attr('y1', y(100)).attr('y2', y(100))
+    .attr('stroke', INK)
+    .attr('stroke-dasharray', '4 4');
 
-            // Draw the bars
-            const bars = chart.selectAll(".bar")
-                .data(filteredData, function(d) {
-                    return d["Road User Group"];
-                });
+  svg.append('text')
+    .attr('x', margin.left)
+    .attr('y', margin.top - 22)
+    .attr('fill', MUTED)
+    .attr('font-size', 13)
+    .text('Index, 2011 = 100');
 
-            bars.exit().remove();
+  const path = d3.line().x((p) => x(p.year)).y((p) => y(p.value));
 
-            bars.enter()
-                .append("rect")
-                .attr("class", "bar")
-                .merge(bars)
-                .attr("x", function(d) {
-                    const actualWidth = Math.abs(xScale(d[metric]) - xScale(0));
-                    const visibleWidth = Math.max(actualWidth - 2, 4);
+  svg.append('g')
+    .selectAll('path')
+    .data(lines)
+    .join('path')
+    .attr('d', (l) => path(l.points))
+    .attr('fill', 'none')
+    .attr('stroke', (l) => colourFor(l.d.abs))
+    .attr('stroke-width', 2.5)
+    .attr('stroke-linecap', 'round')
+    .on('mouseenter', (event, l) => showTooltip(event, l.d))
+    .on('mousemove', moveTooltip)
+    .on('mouseleave', hideTooltip);
 
-                    return d[metric] >= 0
-                        ? xScale(0) + 1
-                        : xScale(0) - 1 - visibleWidth;
-                })
-                .attr("y", function(d) {
-                    return yScale(d["Road User Group"]);
-                })
-                .attr("width", function(d) {
-                    const actualWidth = Math.abs(xScale(d[metric]) - xScale(0));
+  const labels = spread(lines.map((l) => ({ l, y: y(l.points[l.points.length - 1].value) })), 18);
+  svg.append('g')
+    .selectAll('text')
+    .data(labels)
+    .join('text')
+    .attr('x', x(YEARS[YEARS.length - 1]) + 12)
+    .attr('y', (item) => item.y)
+    .attr('dy', '0.32em')
+    .attr('fill', INK)
+    .attr('font-size', 14)
+    .text((item) => item.l.d.name);
+}
 
-                    return d[metric] === 0
-                        ? 0
-                        : Math.max(actualWidth - 1, 4);
-                })
-                .attr("height", yScale.bandwidth())
-                .attr("fill", function(d) {
-                    return d[metric] >= 0 ? "#3E5DAA" : "#D66B6B";
-                })
-                .style("transition", "filter 180ms ease, opacity 180ms ease")
-                .on("mouseover", function() {
-                    d3.select(this)
-                        .style("filter", "brightness(1.12) drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.18))")
-                        .attr("opacity", 1);
-                })
-                .on("mouseout", function() {
-                    d3.select(this)
-                        .style("filter", "none")
-                        .attr("opacity", 1);
-                })
-                .selectAll("title")
-                .data(function(d) {
-                    return [d];
-                })
-                .join("title")
-                .text(function(d) {
-                    return d["Road User Group"] +
-                        "\n2011 hospitalisations: " + d3.format(",")(d["2011+Sum(Hospitalisations)"]) +
-                        "\n2021 hospitalisations: " + d3.format(",")(d["2021+Sum(Hospitalisations)"]) +
-                        "\nAbsolute change: " + d3.format("+,")(d["Absolute Change"]) +
-                        "\nPercentage change: " + d["Percentage Change"].toFixed(2) + "%";
-                });
+function render() {
+  if (!rows.length) return;
+  const { width, height } = chartEl.getBoundingClientRect();
+  const svg = d3.select(chartEl)
+    .selectAll('svg')
+    .data([null])
+    .join('svg')
+    .attr('width', width)
+    .attr('height', height);
+  svg.selectAll('*').remove();
+  hideTooltip();
+  if (view === 'bars') drawBars(svg, width, height);
+  else drawIndex(svg, width, height);
+  aboutTexts.forEach((p) => { p.hidden = p.dataset.about !== view; });
+  casesSetting.classList.toggle('hidden', view !== 'bars');
+}
 
-            // Add the values beside the bars
-            const labels = chart.selectAll(".value-label")
-                .data(filteredData, function(d) {
-                    return d["Road User Group"];
-                });
+viewButtons.forEach((btn) => btn.addEventListener('click', () => {
+  view = btn.dataset.view;
+  viewButtons.forEach((b) => {
+    const active = b === btn;
+    b.classList.toggle('bg-accent', active);
+    b.classList.toggle('text-white', active);
+    b.classList.toggle('text-muted', !active);
+  });
+  render();
+}));
 
-            labels.exit().remove();
+casesToggle.addEventListener('change', render);
 
-            labels.enter()
-                .append("text")
-                .attr("class", "value-label")
-                .merge(labels)
-                .attr("x", function(d) {
-                    const labelGap = 14;
+roadToggle.addEventListener('click', () => roadMenu.classList.toggle('hidden'));
 
-                    if (d[metric] >= 0) {
-                        return Math.max(
-                            xScale(d[metric]) + labelGap,
-                            xScale(0) + labelGap
-                        );
-                    } else {
-                        return Math.min(
-                            xScale(d[metric]) - labelGap,
-                            xScale(0) - labelGap
-                        );
-                    }
-                })
-                .attr("y", function(d) {
-                    return yScale(d["Road User Group"]) + yScale.bandwidth() / 2;
-                })
-                .attr("dy", "0.35em")
-                .attr("text-anchor", function(d) {
-                    return d[metric] >= 0 ? "start" : "end";
-                })
-                .attr("font-size", "12px")
-                .attr("fill", "#222222")
-                .text(function(d) {
-                    return selectedMetric === "absolute"
-                        ? d3.format("+,")(d[metric])
-                        : d3.format("+.2f")(d[metric]) + "%";
-                });
+document.addEventListener('click', (event) => {
+  if (!roadMenu.contains(event.target) && !roadToggle.contains(event.target)) roadMenu.classList.add('hidden');
+});
 
-            // Update the horizontal axis label
-            axisLabel.text(
-                selectedMetric === "absolute"
-                    ? "Change in hospitalisations (cases)"
-                    : "Percentage change in hospitalisations (%)"
-            );
-        }
+roadCheckboxes.forEach((box) => box.addEventListener('change', () => {
+  if (box.checked) selectedRoads.add(box.dataset.road);
+  else selectedRoads.delete(box.dataset.road);
+  roadCount.textContent = `${selectedRoads.size} of ${GROUPS.length}`;
+  render();
+}));
 
-        // Handle metric selection buttons
-        d3.selectAll(".metric-option")
-            .on("click", function() {
+window.addEventListener('resize', render);
 
-                selectedMetric = this.dataset.metric;
-
-                // Update the selected button appearance
-                d3.selectAll(".metric-option")
-                    .classed("bg-white shadow-sm text-ink", false)
-                    .classed("text-muted", true);
-
-                d3.select(this)
-                    .classed("bg-white shadow-sm text-ink", true)
-                    .classed("text-muted", false);
-
-                updateChart();
-            });
-
-        // Handle road user group buttons
-        d3.selectAll(".group-option")
-            .on("click", function() {
-
-                selectedGroup = this.dataset.group;
-
-                // Update the selected button appearance
-                d3.selectAll(".group-option")
-                    .classed("bg-white shadow-sm text-ink", false)
-                    .classed("text-muted", true);
-
-                d3.select(this)
-                    .classed("bg-white shadow-sm text-ink", true)
-                    .classed("text-muted", false);
-
-                updateChart();
-            });
-
-        // Handle reset button
-        d3.select("#reset-filters")
-            .on("click", function() {
-
-                selectedMetric = "absolute";
-                selectedGroup = "all";
-
-                // Restore the original button selections
-                d3.selectAll(".metric-option")
-                    .classed("bg-white shadow-sm text-ink", false)
-                    .classed("text-muted", true);
-
-                d3.select('[data-metric="absolute"]')
-                    .classed("bg-white shadow-sm text-ink", true)
-                    .classed("text-muted", false);
-
-                d3.selectAll(".group-option")
-                    .classed("bg-white shadow-sm text-ink", false)
-                    .classed("text-muted", true);
-
-                d3.select('[data-group="all"]')
-                    .classed("bg-white shadow-sm text-ink", true)
-                    .classed("text-muted", false);
-
-                updateChart();
-            });
-
-        // Display the original chart when the page loads
-        updateChart();
-
-    })
-    .catch(function(error) {
-        console.error("Error loading road user dataset:", error);
-    });
+d3.csv('data/processed/road_user_changes_2011_2021.csv').then((data) => {
+  rows = data
+    .filter((d) => GROUPS.includes(d['Road User Group']))
+    .map((d) => ({
+      name: d['Road User Group'],
+      series: YEARS.map((year) => +d[`${year}+Sum(Hospitalisations)`]),
+      y2011: +d['2011+Sum(Hospitalisations)'],
+      y2021: +d['2021+Sum(Hospitalisations)'],
+      abs: +d['Absolute Change'],
+      pct: +d['Percentage Change'],
+    }));
+  const top = [...rows].sort((a, b) => Math.abs(b.abs) - Math.abs(a.abs)).slice(0, 6).map((d) => d.name);
+  top.forEach((name) => selectedRoads.add(name));
+  roadCheckboxes.forEach((box) => { box.checked = selectedRoads.has(box.dataset.road); });
+  roadCount.textContent = `${selectedRoads.size} of ${GROUPS.length}`;
+  render();
+});
