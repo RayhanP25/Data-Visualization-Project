@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Question 2 · Road Crash Hospitalisations</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body class="flex min-h-screen flex-col bg-page font-sans">
+
+  <div id="site-header" data-page="home"></div>
+
+  <main class="flex min-h-0 flex-1 flex-col">
+
+    <section class="q2-section flex min-h-0 flex-1 flex-col px-20 pt-[clamp(1.5rem,6vh,4.75rem)] pb-[clamp(1rem,4vh,3.5rem)]">
+
+      <h1 class="text-[clamp(1.75rem,5vh,2.5rem)] font-bold leading-[1.15] text-ink">
+        How does the gap between males and females change across age groups and road user types?
+      </h1>
+
+      <div class="q2-layout mt-[clamp(1rem,3vh,2.25rem)] flex min-h-0 flex-1 gap-6">
+
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+
+          <div class="q2-controls flex flex-wrap items-center justify-between gap-4">
+
+            <div class="inline-flex rounded-full border border-header-line bg-white p-1 text-sm font-bold">
+
+              <button id="ageBtn" type="button" class="rounded-full bg-accent px-4 py-1.5 text-white">
+                Age Groups
+              </button>
+
+              <button id="roadBtn" type="button" class="rounded-full px-4 py-1.5 text-muted">
+                Road Users
+              </button>
+
+            </div>
+
+            <span class="text-sm text-muted">
+              Australia · 2011–2021
+            </span>
+
+          </div>
+
+          <div class="relative mt-4 flex min-h-[470px] flex-1 flex-col rounded-2xl border border-card-line bg-white p-6">
+
+            <h2 id="q2ChartTitle" class="text-lg font-bold text-ink">
+              Hospitalisations by Age Group and Gender
+            </h2>
+
+            <p id="q2ChartSubtitle" class="mt-2 text-sm text-muted">
+              Male and female hospitalisation totals
+            </p>
+
+            <div id="q2Legend" class="mt-4 flex flex-wrap gap-5 text-sm text-muted"></div>
+
+            <div id="q2Chart" class="mt-3 min-h-[340px] min-w-0 flex-1"></div>
+
+          </div>
+        </div>
+
+        <aside class="q2-info no-scrollbar w-[22.25rem] shrink-0 overflow-y-auto rounded-2xl border border-card-line bg-white p-6">
+
+          <h2 class="text-lg font-bold text-ink">About this view</h2>
+
+          <p id="q2Description" class="mt-3 text-[0.9375rem] leading-6 text-muted">
+            Compare male and female hospitalisations across age groups.
+          </p>
+
+          <h2 class="mt-6 text-lg font-bold text-ink">Key findings</h2>
+
+          <div id="q2Findings" class="mt-3 text-[0.9375rem] leading-6 text-muted">
+            Loading data...
+          </div>
+
+          <h2 class="mt-6 text-lg font-bold text-ink">How to interact</h2>
+
+          <ul class="mt-3 list-disc space-y-2 pl-5 text-[0.9375rem] leading-6 text-muted">
+            <li>Switch between Age Groups and Road Users.</li>
+            <li>Hover over bars to see exact hospitalisation counts.</li>
+            <li>Compare male and female totals or their differences.</li>
+          </ul>
+
+          <p class="mt-6 text-xs leading-5 text-muted">
+            Note: The source age label "2016-08-01" is shown as
+            "8–16*" provisionally. This label requires verification
+            against the original data.
+          </p>
+
+        </aside>
+      </div>
+
+      <nav class="mt-auto grid grid-cols-3 items-center pt-6 text-[0.9375rem] font-bold text-accent">
+
+        <a href="q1.html" class="justify-self-start hover:underline">
+          ← Previous question
+        </a>
+
+        <span class="justify-self-center text-sm font-normal text-muted">
+          02 / 05
+        </span>
+
+        <a href="q3.html" class="justify-self-end hover:underline">
+          Next question →
+        </a>
+
+      </nav>
+
+    </section>
+  </main>
+
+  <div id="q2Tooltip" class="q1-tooltip"></div>
+
+  <script src="js/header.js"></script>
+  <script src="js/q2.js"></script>
+
+</body>
+</html>

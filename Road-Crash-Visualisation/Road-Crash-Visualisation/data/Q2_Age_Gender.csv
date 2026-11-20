@@ -1,0 +1,9 @@
+"Age group","Female+Sum(Sum(Hospitalisations))","Male+Sum(Sum(Hospitalisations))","intersex or indeterminate or missing+Sum(Sum(Hospitalisations))"
+"0-7",3262,4743,
+"17-25",30569,58352,4
+"2016-08-01",7905,19548,
+"26-39",32549,66941,5
+"40-64",44796,88928,5
+"65-74",12391,15679,1
+"75+",12634,12571,
+"Missing",,1,
